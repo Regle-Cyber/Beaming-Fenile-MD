@@ -30,11 +30,7 @@ import { format } from 'util';
 import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import pino from 'pino';
-import {
-  mongoDB,
-  mongoDBV2
-} from './lib/mongoDB.js';
-//import store from './lib/storee.js'
+
 const { DisconnectReason, useMultiFileAuthState, MessageRetryMap, fetchLatestBaileysVersion, makeInMemoryStore } = await import('@adiwajshing/baileys');
 
 const { CONNECTING } = ws

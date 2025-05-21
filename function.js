@@ -10,12 +10,8 @@ global.exc = (cmd) => spawn(cmd, [], {
 });
 
 import * as stiker from './lib/sticker.js'
-global.stikerjs = stiker
 import savetube from "./lib/downloader/savetube.js"
 import * as NodeID3 from "node-id3"
-import nhentai from "nhentai"
-global.nhentai = new nhentai.API();
-global.Test = await global.nhentai.search("lolicon")
 
 //Special Function
 global.reloadCmd = function() {
