@@ -30,9 +30,7 @@ export async function handler(chatUpdate) {
     if (!m)
         return
     if (global.db.data == null) await global.loadDatabase()
-    //db.data.users["6288276549486@s.whatsapp.net"].creditscore = Infinity
-    /* Creditos a Otosaka (https://wa.me/51993966345) */
-
+    /* Credits from Regle (https://wa.me/6288286623228) */
 
     /*------------------------------------------------*/
     try {
@@ -115,6 +113,7 @@ export async function handler(chatUpdate) {
                     wintergem: 0
                 }
             delete global.db.data.users["undefined"]
+            //RPG items
             let items = global.db.data.users[m.sender].items
 		    if (typeof items !== 'object')
 			global.db.data.users[m.sender].items = {}
@@ -144,6 +143,7 @@ export async function handler(chatUpdate) {
 		            trash: 0,
 		            string: 0
 				}
+            //Some code not used
             let chat = global.db.data.chats[m.chat]
             if (typeof chat !== 'object')
                 global.db.data.chats[m.chat] = {}
@@ -174,6 +174,7 @@ export async function handler(chatUpdate) {
                     expired: 0,
                 }
             delete global.db.data.chats["undefined"]
+            //This code is not used, but change in 'config.js'
             let settings = global.db.data.settings[this.user.jid]
             if (typeof settings !== 'object') global.db.data.settings[this.user.jid] = {}
             if (settings) {
@@ -320,6 +321,7 @@ export async function handler(chatUpdate) {
             if (typeof plugin !== 'function')
                 continue
             if ((usedPrefix = (match[0] || '')[0])) {
+                if (global.setting.nyimak) return
                 if (m.text == usedPrefix) return
                 let noPrefix = m.text.replace(usedPrefix, '')
                 let [command, ...args] = noPrefix.trim().split` `.filter(v => v)
@@ -370,7 +372,7 @@ export async function handler(chatUpdate) {
                         return
                     }
                     
-                    //Required User
+                    //Required from User
                     //if (name.match("game-") && !isOwner) return dfail("mtnc", m, conn)
                     if (!plugin.tags.includes("main") && !m.isGroup && user.registered == false)
                         return dfail("You need permission from *Owner* to use bot!", m, this)
@@ -380,8 +382,9 @@ export async function handler(chatUpdate) {
                         return dfail("unreg", m, this)
                     /*if (m.sender.match("82181537882") && m.isGroup && name.match("pin"))
                         return dfail("You cannot use command *.pin* in Group!", m, this)*/
-                    if (global.filterWord.exec(text)) {
-                        if (plugin.tags.includes("image") && !chat.isNsfw) {
+                    if (global.filterWord.test(text)) {
+                        console.log(global.filterWord.exec(text))
+                        if (plugin.tags.includes("image") && !chat.nsfw) {
                             if (!m.isGroup) {
                                 dfail("Bad Word has detect, please activate nsfw using command *.on nsfw*!", m, this)
                                 return
@@ -529,7 +532,8 @@ export async function handler(chatUpdate) {
                         let text = format(e)
                         for (let key of Object.values(global.APIKeys))
                             text = text.replace(new RegExp(key, 'g'), '#HIDDEN#')
-                        if (e.name) {
+                        //required DiscordBot
+                        if (global.isDiscordBot && e.name) {
                             let str = `
 **🗂️ Plugin:** ${m.plugin}
 **👤 Sender:** ${m.sender}
@@ -546,11 +550,7 @@ export async function handler(chatUpdate) {
                                 embeds: [
                                     new EmbedBuilder()
                                     .setColor("#FFF14B")
-                                    .setDescription(str)
-                                    .addFields({
-                                        name: "📄 Error Logs",
-                                        value: text.substring(0, 1000) + "....."
-                                    })
+                                    .setDescription(`${str}\n\n📄 Error Logs: ${text.substring(0, 4000)}`)
                                     .setTimestamp()
                                     .setAuthor({
                                         name: _user.name,
@@ -589,8 +589,10 @@ export async function handler(chatUpdate) {
             if (usedPrefix == "/") return
             if (adminMode) return
             await conn.sendPresenceUpdate('composing', m.chat)
-            //await this.readMessages([m.key])
-            dfail("Command not found!!", m, conn)
+            let resultcmd = global.findCommand(m.text.slice(1))
+            if (resultcmd.length) {
+                dfail("Command not found!, You mean:\n\n> "+resultcmd.join(" \n> ").replace(/[\^|]/g, ', '), m, conn)
+            } else dfail("Command not found!!", m, conn)
         }
     } catch (e) {
         console.error(e)
@@ -891,9 +893,9 @@ global.dfail = (type, m, conn) => {
     })
 }
 
-let file = global.__filename(import.meta.url, true)
+/*let file = global.__filename(import.meta.url, true)
 watchFile(file, async () => {
     unwatchFile(file)
     console.log(chalk.redBright("Update 'handler.js'"))
     if (global.reloadHandler) console.log(await global.reloadHandler())
-})
+})*/
