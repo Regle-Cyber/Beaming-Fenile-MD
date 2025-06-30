@@ -31,6 +31,8 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import pino from 'pino';
 
+
+import store from './lib/storee.js'
 const { DisconnectReason, useMultiFileAuthState, MessageRetryMap, fetchLatestBaileysVersion, makeInMemoryStore } = await import('@adiwajshing/baileys');
 
 const { CONNECTING } = ws
@@ -92,13 +94,11 @@ if (!opts['test']) {
 const logger = pino({
     level: "silent"
 });
-global.store = makeInMemoryStore({
+/*global.store = makeInMemoryStore({
     logger
-})
+})*/
 
 global.authFile = `sessions`
-var storeFile = `${opts._[0] || 'data'}.store.json`
-store.readFromFile(storeFile)
 
 const {
     state,
@@ -112,46 +112,18 @@ let {
 
 const connectionOptions = {
     printQRInTerminal: false,
-    patchMessageBeforeSending: (message) => {
-        const requiresPatch = !!(message.buttonsMessage || message.templateMessage || message.listMessage);
-        if (requiresPatch) {
-            message = {
-                viewOnceMessage: {
-                    message: {
-                        messageContextInfo: {
-                            deviceListMetadataVersion: 2,
-                            deviceListMetadata: {}
-                        },
-                        ...message
-                    }
-                }
-            };
-        }
-        return message;
-    },
     auth: state,
-    getMessage: async (key) => {
-        if (store) {
-            let jid = jidNormalizedUser(key.remoteJid)
-            let msg = await store.loadMessage(jid, key.id)
-            return msg?.message || ""
-        }
-        return proto.Message.fromObject({});
-    },
     // logger: pino({ level: 'trace' })
     logger: pino({
         level: 'silent'
     }),
     markOnlineOnConnect: global.setting.markAsOnline,
     generateHighQualityLinkPreview: true,
-    fireInitQueries: false,
-    shouldSyncHistoryMessage: false,
-    downloadHistory: false,
     syncFullHistory: false
 }
 
 global.conn = makeWASocket(connectionOptions)
-store.bind(conn.ev)
+//store.bind(conn.ev)
 conn.isInit = false
 
 if (global.setting.clearTmp) {
@@ -267,6 +239,7 @@ global.reloadHandler = async function(restatConn) {
             chats: oldChats
         })
         isInit = true
+        global.hasLostConnection = true
     }
     if (!isInit) {
         conn.ev.off('messages.upsert', conn.handler);
@@ -380,7 +353,7 @@ async function watchFiles() {
         const watcher = chokidar.watch(mainDir, {
             ignored: (filePath, stats) =>
                 stats?.isFile() &&
-                (filePath?.match(/node_modules|#unused/) ||
+                (filePath?.match(/node_modules|#unused|#special/) ||
                     filePath?.startsWith(".") ||
                     !filePath?.endsWith(".js")),
             persistent: true,
@@ -458,6 +431,7 @@ async function watchFiles() {
                         );
                         conn.logger.info(`Changed lib: ${resolvedFile}`);
                     } else if (dir === "main") {
+                        await global.reloadHandler()
                         conn.logger.info(`Changed main: ${resolvedFile}`);
                     } else {
                         conn.logger.warn(`File changed outside of recognized directories: ${filePath}`);
@@ -607,10 +581,12 @@ async function reloadHandlerStep() {
 
 async function reloadDiscordBot() {
     try {
+        global.isDiscordBot = true
         await import('/storage/emulated/0/code/DiscordBot/bot.js')
         console.log(chalk.bold.green('Reload Discord Bot selesai.'));
     } catch (error) {
-        throw new Error(chalk.bold.red(`Error in reload discord bot: ${error}`));
+        global.isDiscordBot = false
+        throw new Error(chalk.bold.red(`Error in reload discord bot: ${error.message}`));
     }
 }
 
