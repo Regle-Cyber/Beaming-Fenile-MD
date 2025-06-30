@@ -2,4 +2,4 @@
 
 File Plugins in my local folder
 
-Required repo DiscordBot
+Required DiscordBot in error message
