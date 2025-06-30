@@ -12,3 +12,10 @@ Welcome to X Version Beta v2
 - Rework command RPG `inventory, shop, bank`
 - Update Database
 - Bug Fixed
+
+# x1.2.7.13
+- Grow a Garden stock filtur
+
+# x1.2.7.15
+- Update Grow a Garden filtur
+- Bug Fixed
