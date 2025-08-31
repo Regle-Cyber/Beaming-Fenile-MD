@@ -2,4 +2,4 @@
 
 File Plugins in my local folder
 
-Required DiscordBot in error message
+This Repo not updated yet
